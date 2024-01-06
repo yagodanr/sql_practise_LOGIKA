@@ -1,5 +1,4 @@
 import sqlite3
-import models
 
 
 
@@ -10,6 +9,7 @@ class DB:
         self.cur = self.con.cursor()
         
     def __del__(self):
+        self.cur.close()
         self.con.close()
     
     
@@ -36,26 +36,41 @@ class DB:
             );''')
         
     
-    def add_student(self, name: str, age: int, major: str):
+    def add_student(self, name: str, age: int, major: str) -> tuple:
         self.cur.execute(f'''INSERT INTO students(name, age, major) 
         VALUES
             (?, ?, ?);''', 
         (name, age, major))
         
         self.con.commit()
+        
+        self.cur.execute('''SELECT * FROM students
+            ORDER BY id DESC
+            LIMIT 1;''')
+        response = self.cur.fetchone()
+        return response
     
-    def add_course(self, course_name: str, instructor: str):
+    def add_course(self, course_name: str, instructor: str) -> tuple:
         self.cur.execute(f'''INSERT INTO courses(course_name, instructor) 
         VALUES
             (?, ?);''', 
         (course_name, instructor))
-        
+    
         self.con.commit()
+        
+        self.cur.execute('''SELECT * FROM courses
+            ORDER BY course_id DESC
+            LIMIT 1;''')
+        response = self.cur.fetchone()
+        return response    
+        
+    # def update_student(self, student_id: int, ):
     
     
 
 if __name__ == "__main__":
     db = DB("db.db")
     db.create_tables()
-    db.add_student(models.StudentCreate(name="Maya", age=3000, major="calendar"))
+    print(db.add_student(name="Maya", age=3000, major="calendar"))
+    print(db.add_course("Math", "Starch"))
     
