@@ -81,8 +81,12 @@ class DB:
         return self.cur.fetchall()
     
     def get_course_id_by_name(self, course_name: str) -> int:
-        self.cur.execute('''SELECT id FROM courses WHERE course_name=?''', (course_name,))
-        return self.cur.fetchone()
+        self.cur.execute('''SELECT course_id FROM courses WHERE course_name=?''', (course_name,))
+        return self.cur.fetchone()[0]
+    
+    def get_student_id_by_name(self, student_name: str) -> int:
+        self.cur.execute('''SELECT id FROM students WHERE name=?''', (student_name,))
+        return self.cur.fetchone()[0]
     
     def get_students_on_course(self, course_id: int):
         self.cur.execute('''SELECT * FROM students WHERE id IN (SELECT student_id FROM relation WHERE course_id=?)''', (course_id,))
