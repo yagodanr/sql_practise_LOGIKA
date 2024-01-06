@@ -37,7 +37,7 @@ class DB:
         
     
     def add_student(self, name: str, age: int, major: str) -> tuple:
-        self.cur.execute(f'''INSERT INTO students(name, age, major) 
+        self.cur.execute('''INSERT INTO students(name, age, major) 
         VALUES
             (?, ?, ?);''', 
         (name, age, major))
@@ -51,7 +51,7 @@ class DB:
         return response
     
     def add_course(self, course_name: str, instructor: str) -> tuple:
-        self.cur.execute(f'''INSERT INTO courses(course_name, instructor) 
+        self.cur.execute('''INSERT INTO courses(course_name, instructor) 
         VALUES
             (?, ?);''', 
         (course_name, instructor))
@@ -64,13 +64,34 @@ class DB:
         response = self.cur.fetchone()
         return response    
         
-    # def update_student(self, student_id: int, ):
+    def connect_student_to_course(self, student_id: int, course_id: int):
+        self.cur.execute('''INSERT INTO relation(student_id, course_id)
+                         VALUES
+                            (?, ?)''', 
+                        (student_id, course_id))
+
+        self.con.commit()
     
+    def get_all_students(self) -> tuple[tuple]:
+        self.cur.execute('''SELECT * FROM students''')
+        return self.cur.fetchall()
     
+    def get_all_courses(self) -> tuple[tuple]:
+        self.cur.execute('''SELECT * FROM courses''')
+        return self.cur.fetchall()
+    
+    def get_course_id_by_name(self, course_name: str) -> int:
+        self.cur.execute('''SELECT id FROM courses WHERE course_name=?''', (course_name,))
+        return self.cur.fetchone()
+    
+    def get_students_on_course(self, course_id: int):
+        self.cur.execute('''SELECT * FROM students WHERE id IN (SELECT student_id FROM relation WHERE course_id=?)''', (course_id,))
+        return self.cur.fetchall()
 
 if __name__ == "__main__":
     db = DB("db.db")
     db.create_tables()
     print(db.add_student(name="Maya", age=3000, major="calendar"))
     print(db.add_course("Math", "Starch"))
+    db.connect_student_to_course(1, 1)
     
