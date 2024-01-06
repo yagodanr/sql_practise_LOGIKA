@@ -14,13 +14,13 @@ class DB:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
                 age INTEGER,
-                major TEXT,
+                major TEXT
             );''')
 
         self.cur.execute('''CREATE TABLE IF NOT EXISTS courses(
                 course_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 course_name TEXT,
-                instructor TEXT,
+                instructor TEXT
             );''')
         
         self.cur.execute('''CREATE TABLE IF NOT EXISTS relation(
@@ -32,5 +32,8 @@ class DB:
             );''')
         
     
-    
+
+if __name__ == "__main__":
+    db = DB("db.db")
+    db.create_tables()
     
