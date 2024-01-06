@@ -1,97 +1,91 @@
-import sqlite3
+from db import DB
 
 
-
-
-class DB:
-    def __init__(self, db_name: str):
-        self.con = sqlite3.connect(db_name)
-        self.cur = self.con.cursor()
-        
-    def __del__(self):
-        self.cur.close()
-        self.con.close()
-    
-    
-    def create_tables(self):
-        self.cur.execute('''CREATE TABLE IF NOT EXISTS students(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                age INTEGER,
-                major TEXT
-            );''')
-
-        self.cur.execute('''CREATE TABLE IF NOT EXISTS courses(
-                course_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                course_name TEXT,
-                instructor TEXT
-            );''')
-        
-        self.cur.execute('''CREATE TABLE IF NOT EXISTS relation(
-                relation_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_id INT,
-                course_id INT,
-                FOREIGN KEY(student_id) REFERENCES students(id),
-                FOREIGN KEY(course_id) REFERENCES courses(course_id)
-            );''')
-        
-    
-    def add_student(self, name: str, age: int, major: str) -> tuple:
-        self.cur.execute('''INSERT INTO students(name, age, major) 
-        VALUES
-            (?, ?, ?);''', 
-        (name, age, major))
-        
-        self.con.commit()
-        
-        self.cur.execute('''SELECT * FROM students
-            ORDER BY id DESC
-            LIMIT 1;''')
-        response = self.cur.fetchone()
-        return response
-    
-    def add_course(self, course_name: str, instructor: str) -> tuple:
-        self.cur.execute('''INSERT INTO courses(course_name, instructor) 
-        VALUES
-            (?, ?);''', 
-        (course_name, instructor))
-    
-        self.con.commit()
-        
-        self.cur.execute('''SELECT * FROM courses
-            ORDER BY course_id DESC
-            LIMIT 1;''')
-        response = self.cur.fetchone()
-        return response    
-        
-    def connect_student_to_course(self, student_id: int, course_id: int):
-        self.cur.execute('''INSERT INTO relation(student_id, course_id)
-                         VALUES
-                            (?, ?)''', 
-                        (student_id, course_id))
-
-        self.con.commit()
-    
-    def get_all_students(self) -> tuple[tuple]:
-        self.cur.execute('''SELECT * FROM students''')
-        return self.cur.fetchall()
-    
-    def get_all_courses(self) -> tuple[tuple]:
-        self.cur.execute('''SELECT * FROM courses''')
-        return self.cur.fetchall()
-    
-    def get_course_id_by_name(self, course_name: str) -> int:
-        self.cur.execute('''SELECT id FROM courses WHERE course_name=?''', (course_name,))
-        return self.cur.fetchone()
-    
-    def get_students_on_course(self, course_id: int):
-        self.cur.execute('''SELECT * FROM students WHERE id IN (SELECT student_id FROM relation WHERE course_id=?)''', (course_id,))
-        return self.cur.fetchall()
-
-if __name__ == "__main__":
+def main():
     db = DB("db.db")
     db.create_tables()
-    print(db.add_student(name="Maya", age=3000, major="calendar"))
-    print(db.add_course("Math", "Starch"))
-    db.connect_student_to_course(1, 1)
     
+    while True:
+        print("\n1. Додати нового студента")
+        print("2. Додати новий курс")
+        print("3. Показати список студентів")
+        print("4. Показати список курсів")
+        print("5. Зареєструвати студента на курс")
+        print("6. Показати студентів на конкретному курсі")
+        print("7. Вийти")
+
+        choice = input("Оберіть опцію (1-7): ")
+
+        if choice == "1":
+            # Додавання нового студента     
+            name = input("Введіть ім'я студента: ")
+            while True:
+                age = input("Введіть вік студента: ")
+                try:
+                    age = int(age)
+                except:
+                    print("Вік має бути числом")
+                else:
+                    break
+            major = input("Введіть додаткову інформацію про студента: ")
+            
+            print(db.add_student(name, age, major))
+
+        elif choice == "2":
+            # Додавання нового курсу   
+            name = input("Введіть назву курсе: ")
+            instructor = input("Введіть ім'я викладача: ")
+            
+            print(db.add_course(name, instructor))
+
+        elif choice == "3":
+            # Показати список студентів
+            print(db.get_all_students())
+        
+        elif choice == "4":
+            # Показати список курсів
+            print(db.get_all_courses())
+
+        elif choice == "5":
+            # Зареєструвати студента на курс
+            student = input("Введіть ім'я/індекс студента: ")
+            try:
+                student = int(student)
+            except:
+                student = db.get_student_id_by_name(student)
+            
+            course = input("Введіть назву/індекс курсу: ")
+            try:
+                course = int(course)
+            except:
+                course = db.get_course_id_by_name(course)
+            
+            try:
+                db.connect_student_to_course(student, course)
+            except Exception as error:
+                print("Помилка: \n", error)
+            else:
+                print("Студента успішно зареєстровано!")
+            
+
+        elif choice == "6":
+            # Показати студентів на конкретному курсі
+            course = input("Введіть назву/індекс курсу: ")
+            try:
+                course = int(course)
+            except:
+                course = db.get_course_id_by_name(course)
+                
+            print(db.get_students_on_course(course))
+        
+        elif choice == "7":
+            break
+
+        else:
+            print("Некоректний вибір. Будь ласка, введіть число від 1 до 7.")
+    
+
+
+
+if __name__ == "__main__":
+    main()
